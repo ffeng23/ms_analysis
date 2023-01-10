@@ -18,5 +18,14 @@
 library(here)
 library(dplyr)
 library(tidyr)
+library(MSstats)
+library(MSstatsConvert)
+library(diann)
+
 #library(readr)
+
+#start reading the files 
+df <- diann_load(here("Data","SNS-101_report_short.tsv"))
+
+
 
