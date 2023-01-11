@@ -31,8 +31,18 @@ df <- diann_load(here("Data","SNS-101_report_short.tsv"))
 annotation_file = read.table(file=here("annotation.tsv"),
 		header=T, sep="\t")
 
+
 data.msstats = DIANN_to_MSstats (df, annotation_file)
 
+
+#reading the real data
+df.all <- diann_load("/mnt/sb_ub1/share/Feng/MS/CD4Tcell_01092023/SNS-101_VISTA_CD4+T_iRT_50cmColumn_report.tsv")
+
+#annotation_file = read.table(file=here("annotation.tsv"),
+#		header=T, sep="\t")
+data.msstats.all = DIANN_to_MSstats (df.all, annotation_file)
+
+save(file="msStats_CD4T_msDiann.Rdata", data.msstats.all)
 
 sample_name <- df$Run %>% 
 		sub(pattern="_122[0-9]{1}2022$", replacement="") %>%
