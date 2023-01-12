@@ -24,7 +24,6 @@ library(diann)
 library(readr)
 
 source("functions.R")
-#library(readr)
 
 #start reading the files 
 df <- diann_load(here("Data","SNS-101_report_short.tsv"))
@@ -36,8 +35,8 @@ annotation_file = read.table(file=here("annotation.tsv"),
 data.msstats = DIANN_to_MSstats (df, annotation_file)
 
 
-#reading the real data
-df.all <- diann_load("/mnt/sb_ub1/share/Feng/MS/CD4Tcell_01092023/SNS-101_VISTA_CD4+T_iRT_50cmColumn_report.tsv")
+#reading the real data, using diann package. we don't have to, since it read in as a tsv flat file
+df.all <- diann_load(here("datapath","SNS-101_VISTA_CD4+T_iRT_50cmColumn_report.tsv"))
 
 #annotation_file = read.table(file=here("annotation.tsv"),
 #		header=T, sep="\t")
