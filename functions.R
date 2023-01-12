@@ -94,10 +94,31 @@ DIANN2MQuant <- function(diann_dat, sample_name)
 {
   #here, select first sets of fields /columns in the output
 
+  #here, select first sets of fields /columns in the output
+
   dfm <- diann_dat
   dfm$sample_name = sample_name 
-  dfm <- dfm %>% select(sample_name,Run, Protein.Group,  Protein.Ids, Protein.Names, Genes)
-)
+  temp <- dfm %>% group_by(sample_name,Run, Protein.Group,  Protein.Ids, Protein.Names, Genes,
+        Stripped.Sequence, First.Protein.Description, Precursor.Charge, Lib.Q.Value, Lib.PG.Q.Value,
+        Global.Q.Value, Global.PG.Q.Value,
+        
+        Genes.MaxLFQ, PG.MaxLFQ, #Q.Value#, #<- this is the quantities will be value to mapped
+        PG.Quantity, PG.Normalised, Genes.Quantity, Genes.Normalised
+    ) %>% summarise()    ##in this piece of data, we have duplicated with difference in Precursor.Id (different modifications)
+                      ## but have same gene quantifications. don't understand!!!
+  #switch to wide format  for Genes.MaxLFQ
+  temp <- temp %>% pivot_wider(id_cols=c( "Protein.Group",  "Protein.Ids", "Protein.Names", "Genes",
+        "Stripped.Sequence", "First.Protein.Description", "Precursor.Charge", "Global.Q.Value", "Global.PG.Q.Value",
+        "Lib.Q.Value", "Lib.PG.Q.Value"
+        ),
+          names_from=sample_name,
+          #names_prefix=c("MaxLFQ."),
+          values_from=c("Genes.MaxLFQ", "PG.MaxLFQ",#"Q.Value",
+            "PG.Quantity", "PG.Normalised", "Genes.Quantity", "Genes.Normalised"),
+          )
 
-  return (dfm)
+  #
+
+
+  return (temp)
 }

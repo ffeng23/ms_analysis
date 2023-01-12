@@ -21,6 +21,7 @@ library(tidyr)
 library(MSstats)
 library(MSstatsConvert)
 library(diann)
+library(readr)
 
 source("functions.R")
 #library(readr)
@@ -44,6 +45,7 @@ data.msstats.all = DIANN_to_MSstats (df.all, annotation_file)
 
 save(file="msStats_CD4T_msDiann.Rdata", data.msstats.all)
 
+#for testing a short file.
 sample_name <- df$Run %>% 
 		sub(pattern="_122[0-9]{1}2022$", replacement="") %>%
 		sub(pattern="DIA-",replacement="", fixed=T) %>%
@@ -51,5 +53,19 @@ sample_name <- df$Run %>%
 		sub(pattern="00ng",replacement="", fixed=T) %>%
 		sub(pattern="SNS-101_VISTA",replacement="SNS_VISTA", fixed=T)  
 
+data.mq = DIANN2MQuant(df, sample_name)
+
+#for the complete file.
+#determine ad-hoc sample name.
+sample_name <- df.all$Run %>% 
+		sub(pattern="_122[0-9]{1}2022$", replacement="") %>%
+		sub(pattern="DIA-",replacement="", fixed=T) %>%
+		sub(pattern="CD4\\+T[_]{1,2}iRT_*",replacement="CD4+", fixed=F) %>%
+		sub(pattern="00ng",replacement="", fixed=T) %>%
+		sub(pattern="SNS-101_VISTA",replacement="SNS_VISTA", fixed=T)  
 
 
+data.mq.all = DIANN2MQuant(df.all, sample_name)
+
+write_delim(x=data.mq.all, file="CD4Tcell_VISTA_SNS_proteingroup.tsv"
+		, delim="\t")
