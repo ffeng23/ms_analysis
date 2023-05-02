@@ -104,7 +104,7 @@ essential_columns = c(feature_id_col, measure_col, sample_id_col)
 #now start doing the sample annotation
 fullname<-data.frame(FullRunName=names(df)[-c(1:3)])
 groups<-cbind(fullname, groups)
-groups$MS_batch<-rep(c(1:3),9)
+groups$MS_batch<-rep(rep(c(1:3),rep(3,3)),3)
 groups$sample_num<-sub(x=groups$samples, pattern="[0-9A-Za-z]+\\-", 
 	replacement="")
 
@@ -115,8 +115,8 @@ groups$sample_num<-sub(x=groups$sample_num, pattern="\\-",
 	replacement="")
 groups$sample_num<-as.numeric(groups$sample_num)
 groups$group_num<-rep(c(1:3),rep(9,3))
-
-groups$order<-(groups$MS_batch-1)*9+((groups$group_num-1)*3+groups$sample_num)
+groups$repeat_num<-rep(c(1:3),9)
+groups$order<-(groups$MS_batch-1)*9+((groups$group_num-1)*3+groups$repeat_num)
 
 groups$MS_batch<-as.factor(groups$MS_batch)
 technical_factors = c('MS_batch')
@@ -178,3 +178,44 @@ plot_title = 'group'#, color_scheme = color_list[['MS_batch']]
 
 library(ggpubr)
 ggarrange(pca1, pca2, ncol = 2, nrow = 1)
+
+plot_PVCA(quantile_normalized_matrix, groups,
+technical_factors = technical_factors,
+biological_factors = biological_factors)
+
+
+quantile_normalized_long <- matrix_to_long(quantile_normalized_matrix)
+loess_fit_70 <- adjust_batch_trend_df(quantile_normalized_long, 
+	groups,
+span = 0.5)
+
+plot_with_fitting_curve(feature_name = 'A0A024RBG1',
+fit_df = loess_fit_70, fit_value_col = 'fit',
+df_long = quantile_normalized_long,
+sample_annotation = groups, color_by_batch = TRUE, 
+#color_scheme = color_list[[batch_col]],
+plot_title = 'Span = 60%')
+
+
+###correct with feature level 
+#peptide_median_df <- center_feature_batch_medians_df(loess_fit_70, groups)
+
+#peptide_median_df <- center_feature_batch_medians_df(quantile_normalized_long, groups)
+
+peptide_median_df<-correct_with_ComBat_df(quantile_normalized_long, groups)
+
+batch_corrected_matrix = long_to_matrix(peptide_median_df)
+
+pca.corrected = plot_PCA(batch_corrected_matrix, groups, color_by = 'MS_batch',
+plot_title = 'MS batch'#, color_scheme = color_list[['MS_batch']]
+)
+
+pca.corrected2 = plot_PCA(batch_corrected_matrix, groups, color_by = 'group',
+plot_title = 'group'#, color_scheme = color_list[['MS_batch']]
+)
+
+ggarrange(pca.corrected, pca.corrected2, ncol = 2, nrow = 1)
+
+plot_PVCA(batch_corrected_matrix, groups,
+technical_factors = technical_factors,
+biological_factors = biological_factors)
