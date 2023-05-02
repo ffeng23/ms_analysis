@@ -78,3 +78,103 @@ pind<-fviz_pca_ind(res, axes=c(1,2),
 pdf(file="normalization.pdf")      
 boxplot(mat)                       
 dev.off()
+
+pdf(file="pca_batch.pdf")      
+pind                       
+dev.off()
+
+	###################################
+	#now need to start using probatch for correction
+	####################################
+
+library(proBatch)
+
+#define the data input, we will use df to start with and turn it into long form
+df[2396,"Protein.Ids"]<-paste0(df[2396,"Protein.Ids"],"-b")
+
+names(df)[2]<-'peptide_group_label'
+df_long<- df %>% pivot_longer(cols=ends_with("12212022"),
+		names_to="FullRunName", values_to="Intensity")
+
+feature_id_col = 'peptide_group_label'
+measure_col = 'Intensity'
+sample_id_col = 'FullRunName'
+essential_columns = c(feature_id_col, measure_col, sample_id_col)
+
+#now start doing the sample annotation
+fullname<-data.frame(FullRunName=names(df)[-c(1:3)])
+groups<-cbind(fullname, groups)
+groups$MS_batch<-rep(c(1:3),9)
+groups$sample_num<-sub(x=groups$samples, pattern="[0-9A-Za-z]+\\-", 
+	replacement="")
+
+groups$sample_num<-sub(x=groups$sample_num, pattern="[a-zA-Z]+", 
+	replacement="")
+
+groups$sample_num<-sub(x=groups$sample_num, pattern="\\-", 
+	replacement="")
+groups$sample_num<-as.numeric(groups$sample_num)
+groups$group_num<-rep(c(1:3),rep(9,3))
+
+groups$order<-(groups$MS_batch-1)*9+((groups$group_num-1)*3+groups$sample_num)
+
+groups$MS_batch<-as.factor(groups$MS_batch)
+technical_factors = c('MS_batch')
+biological_factors = c('group')
+biospecimen_id_col = 'samples'
+
+batch_col='MS_batch'
+
+## create feature annotation
+#feature info is group_info 
+
+
+# follow the code in tutorial/vignette
+example_proteome = df_long %>% select(one_of(essential_columns))
+gc()
+
+example_matrix <- 
+ long_to_matrix(example_proteome,
+	feature_id_col = 'peptide_group_label',
+	measure_col = 'Intensity',
+	sample_id_col = 'FullRunName')
+
+plot_sample_mean(example_matrix, groups, order_col = 'order',
+batch_col = batch_col, color_by_batch = TRUE, ylimits = c(15, 18.5),
+#color_scheme = color_list[[batch_col]]
+)
+
+batch_col = 'MS_batch'
+plot_boxplot(example_proteome, groups,
+batch_col = batch_col#, color_scheme = color_list[[batch_col]]
+)
+
+quantile_normalized_matrix = normalize_data_dm(example_matrix,
+normalize_func = 'quantile')
+
+plot_sample_mean(quantile_normalized_matrix, groups,
+color_by_batch = TRUE, ylimits = c(15, 18),
+#color_scheme = color_list[[batch_col]]
+)
+
+selected_annotations <- c('MS_batch',
+'group')
+
+#Plot clustering between samples
+plot_hierarchical_clustering(quantile_normalized_matrix,
+	sample_annotation = groups,
+	#color_list = color_list,
+	factors_to_plot = selected_annotations,
+	distance = 'euclidean', agglomeration = 'complete',
+	label_samples = FALSE)
+
+pca1 = plot_PCA(quantile_normalized_matrix, groups, color_by = 'MS_batch',
+plot_title = 'MS batch'#, color_scheme = color_list[['MS_batch']]
+)
+
+pca2 = plot_PCA(quantile_normalized_matrix, groups, color_by = 'group',
+plot_title = 'group'#, color_scheme = color_list[['MS_batch']]
+)
+
+library(ggpubr)
+ggarrange(pca1, pca2, ncol = 2, nrow = 1)
