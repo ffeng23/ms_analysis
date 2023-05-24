@@ -12,12 +12,17 @@ library(FactoMineR)
 library(factoextra)
 library(ggpubr)
 
+source(here("functions.R"))
 #read the data
 df <- diann_load(here("Data","DIA-NN.csv"))
+df<-removeReplicates(df)
+
 
 # replace na with 0
 df[is.na(df)]<-0
 df<-df %>% mutate_if( is.numeric, ~log2(.+1) )
+
+
 
 #clean up the column names
 group_info<- df %>%
@@ -375,7 +380,7 @@ heat.sample
 dev.off()
 
 
-
+library(rstatix)
 #now start doing the stats.
 peptide_median_df.group.vi2 <- peptide_median_df.group
 peptide_median_df.group.vi2$Intensity<-peptide_median_df.group.vi2$Intensity +

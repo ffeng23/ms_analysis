@@ -122,3 +122,106 @@ DIANN2MQuant <- function(diann_dat, sample_name)
 
   return (temp)
 }
+
+#'@title remove repeated entries for the same protein/peptide group
+#'@descriptions functions to remove duplicated/replicated entries
+#'  for each protein and peptide group.
+#'@details this function assume the diann format 3 meta columns
+#' in the beginning. should be called as the first step after
+#'  reading in the data. 
+#'  The 'rule' to remove duplicates are defined in the documents 
+#'  (at the same folder)
+#'@param dat the data frame holding the data of diann format. 
+#'  the first 3 columns are "Preotien.Group", Protein.Ids
+#'  "Gene"
+#''
+#'@return a new data frame with no replicated entries
+#''
+#'
+removeReplicates<- function(dat)
+{
+  #this first step we need to check wether there is gene name for the entry
+  # otherwise, we use the protein name
+  index.noGeneName<-grep("^\\s*$",x=dat$Genes)
+  dat[index.noGeneName,"Genes"]<-dat[index.noGeneName,"Protein.Group"]
+  
+  #dat is assumed to be of diann format
+  # check for the duplicate format
+  index.duplicated<-which(duplicated(dat$Genes))
+
+  # get a list of duplicated genes
+  genes.duplicated<-unique(dat$Genes[index.duplicated])
+
+  #get a list of 
+  list.dup<-list()
+  for(i in genes.duplicated)
+  {
+    #cat("i:",i,"\n")
+    list.dup[[i]]<-dat[dat$Genes==i,]
+  }
+
+  #now go through the list and do on them to remove duplicates.
+  list.dup2<-lapply(list.dup, FUN=removeReplicateEntries)
+
+  dat.new<-dat[!is.element(dat$Genes, genes.duplicated),] 
+
+  dat.new<-rbind(dat.new, do.call(rbind,list.dup2))
+  return(dat.new)
+}
+
+#this is actual working horse to work on each duplicated group
+#remove unnecessary ones and left one entry for each group
+# dat1<-dat[dat$Gene=="NACA",]
+#dat1<-dat[dat$Gene=="KIF3B",]
+# dat1<-dat[dat$Gene=="WASH2P;WASH3P",]
+#dat1<-dat[dat$Gene=="POLR1D",]
+#MIEF1
+#TMPO
+#TOR1AIP2
+removeReplicateEntries<-function(dat1)
+{
+
+  nrow.before=1
+  nrow.after=0
+  while(nrow.before > nrow.after){
+    #first check if all the entries are equal on the measurements
+    nrow.before=nrow(dat1)
+    if(nrow(unique(dat1[,-c(1:3)]))==1)
+    {#just pick the first one and done
+      return(dat1[1,])
+    }
+
+    #meaning they are not all equal, we pick the one with less missing values
+    # counting the NAs
+    num.nas<-apply(dat1,1,function(x){sum(is.na(x))}) 
+
+    #pick the one with mininum number of NAs
+    min.value<-min(num.nas)
+
+    dat1<-dat1[num.nas==min.value,]
+    if(nrow(dat1)==1)
+    {
+      return(dat1)
+    }
+
+    #Try the third rule to see whether there is unique peptide entry
+    #looking for things that has one entry (without ; separation)
+    index.single<-grep(";",x=dat1$Protein.Ids,fixed=T, invert=TRUE)
+    if(length(index.single)>0)
+    {
+      dat1<-dat1[index.single,]
+    } #otherwise don't change it.
+
+    if(nrow(dat1)==1)
+    {
+      return(dat1)
+    }
+    nrow.after=nrow(dat1)
+  }
+
+  #if we are here, meaning we still can not remove duplicates
+  # in this case, we simply pick one and issue an warning.
+  warning(paste("Try to remove duplicates but fail for entry gene",
+      dat1$Gene,".\n\t We pick a random one as output\n"))
+  return(dat1[1,])
+}
