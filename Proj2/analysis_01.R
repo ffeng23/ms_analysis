@@ -320,7 +320,7 @@ peptide_df.sample.matrix <- as.data.frame(peptide_df.sample) %>%
 	names_from=samples,
 	values_from=mIntensity
 	)
-
+library(rstatix)
 peptide_df.sample.vi2<-peptide_df.sample
 peptide_df.sample.vi2$mIntensity<-peptide_df.sample.vi2$mIntensity +
 	rnorm(length(peptide_df.sample.vi2$mIntensity),0,0.01)
@@ -380,8 +380,9 @@ heat.sample
 dev.off()
 
 
-library(rstatix)
-#now start doing the stats.
+
+#now start doing the stats. on all samples including technical repeats.
+#
 peptide_median_df.group.vi2 <- peptide_median_df.group
 peptide_median_df.group.vi2$Intensity<-peptide_median_df.group.vi2$Intensity +
 	rnorm(length(peptide_median_df.group.vi2$Intensity),0,0.01)
