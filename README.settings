@@ -7,5 +7,5 @@ R=4.2.2
 
 ## on desktop linux office
 R=4.2.2
-
+conda= R_env
 ???

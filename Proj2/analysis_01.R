@@ -1,4 +1,10 @@
 # R code to do analysis of MS data with T cell in vitro
+#
+#===========updated 5/25/2023
+# add to remove duplicates and then rerun to generate data 
+# results/figures in a new folder 
+# 
+#-------------------------------
 # we do heatmap and pca.
 # we assume so far the data have been normalized.
 # the data are in ../Data folder
@@ -13,6 +19,17 @@ library(factoextra)
 library(ggpubr)
 
 source(here("functions.R"))
+
+# output folder for new results after remove duplicates
+# 
+output.dir<-"Proj2/removeReps"
+
+#if we want to do without removing duplicates, just comment
+# out the line say "df<-removeReplicates(df)"
+# and reset the output.dir to below.
+#output.dir<-"Proj2"
+
+
 #read the data
 df <- diann_load(here("Data","DIA-NN.csv"))
 df<-removeReplicates(df)
@@ -118,11 +135,11 @@ pind<-fviz_pca_ind(res, axes=c(1,2),
 
 #clearly, we need to do normalization. center 
 # we need to do box plot for each sample
-pdf(file=here("Proj2","normalization.pdf"))      
+pdf(file=here(output.dir,"normalization.pdf"))      
 boxplot(mat)                       
 dev.off()
 
-pdf(file=here("Proj2","pca_raw.pdf"),width=15, height=6)      
+pdf(file=here(output.dir,"pca_raw.pdf"),width=15, height=6)      
 ggarrange(pind,pind_g, ncol=2)                       
 dev.off()
 
@@ -131,9 +148,12 @@ dev.off()
 	####################################
 
 library(proBatch)
-
-#define the data input, we will use df to start with and turn it into long form
-df[2396,"Protein.Ids"]<-paste0(df[2396,"Protein.Ids"],"-b")
+	
+	##############################################3
+	#skip this if doing removeDuplicates()<----
+	################################################
+	#define the data input, we will use df to start with and turn it into long form
+	df[2396,"Protein.Ids"]<-paste0(df[2396,"Protein.Ids"],"-b")
 
 names(df)[2]<-'peptide_group_label'
 df_long<- df %>% pivot_longer(cols=ends_with("12212022"),
@@ -173,7 +193,7 @@ batch_col = 'MS_batch'
 bp<-plot_boxplot(example_proteome, groups,
 batch_col = batch_col#, color_scheme = color_list[[batch_col]]
 )
-pdf(file=here("Proj2","boxplot_raw.pdf"),
+pdf(file=here(output.dir,"boxplot_raw.pdf"),
 		width=7, height=3)
 bp 
 dev.off()
@@ -272,7 +292,7 @@ pind2_g<-fviz_pca_ind(res2, axes=c(1,2),
              )
 			
 
-pdf(file=here("Proj2","pca_corrected.pdf"),width=15, height=6)
+pdf(file=here(output.dir,"pca_corrected.pdf"),width=15, height=6)
 ggarrange(pind2, pind2_g, ncol=2)
 dev.off()
 
@@ -285,7 +305,7 @@ ggarrange(pca.corrected, pca.corrected2, ncol = 2, nrow = 1)
 pvca2<-plot_PVCA(batch_corrected_matrix, groups,
 technical_factors = technical_factors,
 biological_factors = biological_factors)
-pdf(file=here("Proj2","PVCA_both.pdf"),width=8,height=7)
+pdf(file=here(output.dir,"PVCA_both.pdf"),width=8,height=7)
 ggarrange(pvca1, pvca2, nrow=2)
 dev.off()
 
@@ -335,21 +355,33 @@ peptide_df.sample$Genes<-group_info[peptide_df.sample$peptide_group_label, "Gene
 out<-peptide_df.sample.matrix
 out$Genes<-group_info[out$peptide_group_label,"Genes"]
 
-write_tsv(file=here("Proj2","VistaCtrl_stats.tsv"),
+write_tsv(file=here(output.dir,"VistaCtrl_stats.tsv"),
 	peptide_df.sample.vi2)
 
-write_tsv(file=here("Proj2","VistaCtrl_expression_BatchCorrected.tsv"),
+write_tsv(file=here(output.dir,"VistaCtrl_expression_BatchCorrected.tsv"),
 	out)
 
-peptide_df.sample.matrix2<-peptide_df.sample.matrix[,-1]
+#drawing only significant genes
 
-x<-apply(peptide_df.sample.matrix2,1, FUN=function(x){length(unique(x))==1})
+x_sig<-peptide_df.sample.vi2[peptide_df.sample.vi2$p<=0.05,]
+
+peptide_df.sample.matrix<-as.data.frame(peptide_df.sample.matrix)
+rownames(peptide_df.sample.matrix)<-peptide_df.sample.matrix$peptide_group_label
+peptide_df.sample.matrix2<-peptide_df.sample.matrix[
+	as.data.frame(x_sig)[,"peptide_group_label"]
+		,-1]
+
+#peptide_df.sample.matrix2<-peptide_df.sample.matrix2[,
+#	c("Ctrl1","Ctrl2","Ctrl3","VISTA-1","VISTA-2","VISTA-3")]
+x<-apply(peptide_df.sample.matrix2,1, 
+	FUN=function(x){length(unique(x))==1})
 y<-which(x)
-d<-dim(peptide_df.sample.matrix2)[2]
-peptide_df.sample.matrix2[y,]<-peptide_df.sample.matrix2[y,]+
-	matrix(rnorm(d*length(y),0,0.01),nrow=length(y),
-		ncol=d)
-
+if(length(y)>0){
+	d<-dim(peptide_df.sample.matrix2)[2]
+	peptide_df.sample.matrix2[y,]<-peptide_df.sample.matrix2[y,]+
+		matrix(rnorm(d*length(y),0,0.01),nrow=length(y),
+			ncol=d)
+}
 
 heat.sample<-pheatmap(peptide_df.sample.matrix2,
 		scale="row", cluster_rows=T,
@@ -369,13 +401,13 @@ peptide_df.mat.vista2[y,]<-peptide_df.mat.vista2[y,]+
 		ncol=d)
 heat.vista2<-pheatmap(peptide_df.mat.vista2,
 		scale="row", cluster_rows=T,
-		cluster_cols=F, 
+		cluster_cols=F, treeheight_row=0,
 		show_rownames=F)
-pdf(file=here("Proj2","Vista_vs_Ctrl_heat.pdf"),width=4,height=6)
+pdf(file=here(output.dir,"Vista_vs_Ctrl_heat.pdf"),width=4,height=6)
 heat.vista2
 dev.off()
 
-pdf(file=here("Proj2","all3_heat.pdf"),width=4,height=6)
+pdf(file=here(output.dir,"all3_heat.pdf"),width=4,height=6)
 heat.sample
 dev.off()
 

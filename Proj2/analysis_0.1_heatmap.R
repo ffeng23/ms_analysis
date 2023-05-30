@@ -1,6 +1,9 @@
 # R code to draw heatmaps
 # using the previously saved data
-
+#========================================
+# updated 5/25/2023. rerun to use the removed duplicated data
+# and redraw the heatmaps
+#
 
 library(here)
 library(dplyr)
@@ -10,8 +13,14 @@ library(ggpubr)
 library(pheatmap)
 library(readxl)
 
+#define the data source
+#   updated source to use the remove duplicated data
+output.dir<-"Proj2/removeReps"
+# to go back to original data please use below
+#output.dir <-"Proj2"
+
 #read data
-df<-read_tsv(file=here("Proj2","VistaCtrl_expression_BatchCorrected.tsv"))
+df<-read_tsv(file=here(output.dir,"VistaCtrl_expression_BatchCorrected.tsv"))
 df<- df %>% select(peptide_group_label,Ctrl1, Ctrl2, Ctrl3, "VISTA-1",
 		"VISTA-2","VISTA-3", Genes)
 
@@ -86,18 +95,28 @@ heat.APCs<-pheatmap(df.heat.matrix,
 		cluster_cols=F, 
 		show_rownames=T)
 
-pdf(file=here("Proj2","pathAPCs_heat.pdf"),
+pdf(file=here(output.dir,"pathAPCs_heat.pdf"),
 		width=4,height=4)
 heat.APCs
 dev.off()
-pdf(file=here("Proj2","pathTCRs_heat.pdf"),
+pdf(file=here(output.dir,"pathTCRs_heat.pdf"),
 		width=4,height=4.5)
 heat.TCRs
 dev.off()
-pdf(file=here("Proj2","pathTolls_heat.pdf"),
+pdf(file=here(output.dir,"pathTolls_heat.pdf"),
 		width=4,height=3.0)
 heat.toll
 dev.off()
+
+
+
+
+
+
+
+
+#########left over from previous one.
+
 #summary to get mean of 3 reps of each sample using long format
 peptide_median_df.group<-cbind(peptide_median_df,
 		groups[peptide_median_df$FullRunName,-1])
