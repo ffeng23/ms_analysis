@@ -12,6 +12,7 @@ library(readr)
 library(ggpubr)
 library(pheatmap)
 library(readxl)
+library(RColorBrewer)
 
 #define the data source
 #   updated source to use the remove duplicated data
@@ -52,8 +53,55 @@ heat.toll<-pheatmap(df.heat.matrix,
 		cluster_cols=F, 
 		show_rownames=T)
 
-##now let's do the second one.
+#start doing bubble plot
+# convert df.heat into long format with Genes vs samplename
+rname<-rownames(df.heat)
+cname<-colnames(df.heat)[2:7]
+df.heat.scaled<-apply(df.heat[,-c(1,8)],1,scale)
+df.heat.scaled<-t(df.heat.scaled)
 
+#reorder using hlcluster
+Rowv <- as.dendrogram(hclust(dist(df.heat.scaled[,-c(1,8)])))
+rowInd <- order.dendrogram(Rowv)
+
+Colv <- as.dendrogram(hclust(dist(t(df.heat.scaled[,-c(1,8)]))))
+colInd <- order.dendrogram(Colv)
+
+colnames(df.heat.scaled)<-cname
+df.heat.scaled<-as.data.frame(df.heat.scaled)
+df.heat.scaled$Genes<-rname
+
+df.heat.scaled<-df.heat.scaled[rowInd, ]
+
+
+
+df.heat.long<- df.heat.scaled %>%
+	pivot_longer(cols=!"Genes",
+		names_to="samples",values_to="Counts"
+		)
+
+df.heat.long$Genes<-factor(df.heat.long$Genes, levels=rname[rowInd])
+bb.toll<-ggplot(data=df.heat.long,aes(samples,Genes, size=(Counts)))+
+	geom_point(aes(colour=Counts))+
+	scale_color_gradientn(
+	colours=colorRampPalette(rev(brewer.pal(n = 7, name ="RdYlBu")))(5)
+	#colours=pal_signal(10) #terrain.colors(10)
+	)+
+	scale_size(range = c(1, 5), name="Counts")+
+	theme_minimal()+
+	theme(axis.title.x = element_blank(),
+			axis.title.y=element_blank(),
+			axis.text=element_text(size=10),
+			axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)
+		)
+pdf(file=here(output.dir,"path_toll_bubble.pdf"),width=4.5,height=4)
+bb.toll
+dev.off()
+
+
+		#############################################
+		##now let's do the second one.
+		###############################################
 tolls<-gpath$TCRs
 tolls<-tolls[1:41]
 
@@ -74,7 +122,54 @@ heat.TCRs<-pheatmap(df.heat.matrix,
 		cluster_cols=F, 
 		show_rownames=T)
 
-## do the third one
+#start doing bubble plot
+# convert df.heat into long format with Genes vs samplename
+rname<-rownames(df.heat)
+cname<-colnames(df.heat)[2:7]
+df.heat.scaled<-apply(df.heat[,-c(1,8)],1,scale)
+df.heat.scaled<-t(df.heat.scaled)
+
+#reorder using hlcluster
+Rowv <- as.dendrogram(hclust(dist(df.heat.scaled[,-c(1,8)])))
+rowInd <- order.dendrogram(Rowv)
+
+Colv <- as.dendrogram(hclust(dist(t(df.heat.scaled[,-c(1,8)]))))
+colInd <- order.dendrogram(Colv)
+
+colnames(df.heat.scaled)<-cname
+df.heat.scaled<-as.data.frame(df.heat.scaled)
+df.heat.scaled$Genes<-rname
+
+df.heat.scaled<-df.heat.scaled[rowInd, ]
+
+
+
+df.heat.long<- df.heat.scaled %>%
+	pivot_longer(cols=!"Genes",
+		names_to="samples",values_to="Counts"
+		)
+
+df.heat.long$Genes<-factor(df.heat.long$Genes, levels=rname[rowInd])
+bb.TCR<-ggplot(data=df.heat.long,aes(samples,Genes, size=(Counts)))+
+	geom_point(aes(colour=Counts))+
+	scale_color_gradientn(
+	colours=colorRampPalette(rev(brewer.pal(n = 7, name ="RdYlBu")))(5)
+	#colours=pal_signal(10) #terrain.colors(10)
+	)+
+	scale_size(range = c(1, 5), name="Counts")+
+	theme_minimal()+
+	theme(axis.title.x = element_blank(),
+			axis.title.y=element_blank(),
+			axis.text=element_text(size=10),
+			axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)
+		)
+pdf(file=here(output.dir,"path_TCR_bubble.pdf"),width=4.5,height=4*33/20)
+bb.TCR
+dev.off()
+
+	#######################################
+	## do the third one
+	######################################
 tolls<-gpath$APCs
 tolls<-tolls[1:29]
 
@@ -94,6 +189,54 @@ heat.APCs<-pheatmap(df.heat.matrix,
 		scale="row", cluster_rows=T,
 		cluster_cols=F, 
 		show_rownames=T)
+
+
+#start doing bubble plot
+# convert df.heat into long format with Genes vs samplename
+rname<-rownames(df.heat)
+cname<-colnames(df.heat)[2:7]
+df.heat.scaled<-apply(df.heat[,-c(1,8)],1,scale)
+df.heat.scaled<-t(df.heat.scaled)
+
+#reorder using hlcluster
+Rowv <- as.dendrogram(hclust(dist(df.heat.scaled[,-c(1,8)])))
+rowInd <- order.dendrogram(Rowv)
+
+Colv <- as.dendrogram(hclust(dist(t(df.heat.scaled[,-c(1,8)]))))
+colInd <- order.dendrogram(Colv)
+
+colnames(df.heat.scaled)<-cname
+df.heat.scaled<-as.data.frame(df.heat.scaled)
+df.heat.scaled$Genes<-rname
+
+df.heat.scaled<-df.heat.scaled[rowInd, ]
+
+
+
+df.heat.long<- df.heat.scaled %>%
+	pivot_longer(cols=!"Genes",
+		names_to="samples",values_to="Counts"
+		)
+
+df.heat.long$Genes<-factor(df.heat.long$Genes, levels=rname[rowInd])
+bb.TCR<-ggplot(data=df.heat.long,aes(samples,Genes, size=(Counts)))+
+	geom_point(aes(colour=Counts))+
+	scale_color_gradientn(
+	colours=colorRampPalette(rev(brewer.pal(n = 7, name ="RdYlBu")))(5)
+	#colours=pal_signal(10) #terrain.colors(10)
+	)+
+	scale_size(range = c(1, 5), name="Counts")+
+	theme_minimal()+
+	theme(axis.title.x = element_blank(),
+			axis.title.y=element_blank(),
+			axis.text=element_text(size=10),
+			axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)
+		)
+pdf(file=here(output.dir,"path_APC_bubble.pdf"),width=4.5,height=4*27/20)
+bb.APC
+dev.off()
+
+
 
 pdf(file=here(output.dir,"pathAPCs_heat.pdf"),
 		width=4,height=4)
