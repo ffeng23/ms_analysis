@@ -9,3 +9,12 @@ R=4.2.2
 R=4.2.2
 conda= R_env
 ???
+
+
+# Readme folders
+
+proj3 : doing analysis on 7/12/2023 about VISTA modification or Kasumi VISTA time course.
+
+see the folder for details.
+
+proj2 : mainly for analysis of batch correction and data analysis of VISTA for manuscript.
