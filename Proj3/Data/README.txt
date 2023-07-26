@@ -14,3 +14,16 @@ is the copy of the above original file, but in csv (comma) format.
 file:///home/feng/Feng/hg/ms_analysis/Proj3/Data/Kasumi3_SNS-101_Timecourse_05272023.tsv
 file:///home/feng/Feng/hg/ms_analysis/Proj3/Data/VISTA_modifications_report - Copy.xlsx
  are two new files. they are the correct ones.
+
+
+############################
+ at 7/26/2023, 2nd run for VISTA VISTA_modifications
+ file:///mnt/sb_ub1/Feng/hg/ms_analysis/Proj3/Data/DIA-NN_VISTA_Modifications_DEPC(H)_report.tsv
+file:///mnt/sb_ub1/Feng/hg/ms_analysis/Proj3/Data/DIA-NN_VISTA_Modifications_DEPC(HCKSTY)_report.tsv
+file:///mnt/sb_ub1/Feng/hg/ms_analysis/Proj3/Data/Spectronaut_VISTAmodifications_DEPC(H)_Report.tsv
+file:///mnt/sb_ub1/Feng/hg/ms_analysis/Proj3/Data/Spectronaut_VISTAmodifications_DEPC_Report.tsv
+ summary: 2 software for processing data: DIA-NN vs. Spectronaut
+    2 conditions: search for all possible amino acids for modifications (HCKSTY) vs. search for H for mods only (H)
+
+see the analysis code at analysis_02.R
+
