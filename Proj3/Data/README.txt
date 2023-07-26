@@ -10,3 +10,7 @@ and
 file:///home/feng/Feng/hg/ms_analysis/Proj3/Data/SwissProt_VISTAmodi_07052023_report.csv
 is the copy of the above original file, but in csv (comma) format.
 
+#
+file:///home/feng/Feng/hg/ms_analysis/Proj3/Data/Kasumi3_SNS-101_Timecourse_05272023.tsv
+file:///home/feng/Feng/hg/ms_analysis/Proj3/Data/VISTA_modifications_report - Copy.xlsx
+ are two new files. they are the correct ones.

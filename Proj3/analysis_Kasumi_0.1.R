@@ -69,9 +69,15 @@ df.proteome.stat<- df.proteome %>%
   	add_significance("p")
 )
 saveRDS(df.proteome.stat, file=here(output.dir,"stat_proteome_fill.Rds"))
-
+#df.proteome.stat<-readRDS(file=here(output.dir,"stat_proteome_fill.Rds"))
 write_csv(df.proteome.stat, 
 	file=here(output.dir,"stat_proteome_fill.csv"))
+df.proteome.stat.wider<-pivot_wider(df.proteome.stat,id_cols=Precursor.Id,
+	names_from=Time, values_from=c(n1,n2, statistic,p, p.adj,p.signif))
+write_csv(df.proteome.stat.wider, 
+	file=here(output.dir,"stat_proteome_fill_reformatted.csv"))
+#put the data into wider format
+
 # do analysis for df.secreteome
 
 #now do t-test for each protein group
@@ -93,8 +99,19 @@ df.secreteome.stat<- df.secreteome %>%
   	add_significance("p")
 
 saveRDS(df.secreteome.stat, file=here(output.dir,"stat_secreteome_fill.Rds"))
+#df.secreteome.stat<-readRDS(file=here(output.dir,"stat_secreteome_fill.Rds"))
+
+
 write_csv(df.secreteome.stat, 
 	file=here(output.dir,"stat_secrete_fill.csv"))
+
+#reformat to wider 
+df.secreteome.stat.wider<-pivot_wider(df.secreteome.stat,id_cols=Precursor.Id,
+	names_from=Time, values_from=c(n1,n2, statistic,p, p.adj,p.signif))
+write_csv(df.secreteome.stat.wider, 
+	file=here(output.dir,"stat_secreteome_fill_reformatted.csv"))
+
+
 
 #now here we remove the one with too few repeats due 
 # to undetected.
@@ -125,9 +142,18 @@ df.proteome.stat2<- df.proteome2 %>%
 
 # df.proteome2[df.proteome2$Stripped.Sequence=="AAAAAAGAGPEMVR",]
 saveRDS(df.proteome.stat2, file=here(output.dir,"stat_proteome_conserved.Rds"))
-
+#df.proteome.stat2<-readRDS(file=here(output.dir,"stat_proteome_conserved.Rds"))
 write_csv(df.proteome.stat2, 
 	file=here(output.dir,"stat_proteome_conserved.csv"))
+
+#reformat to wider 
+df.proteome.stat2.wider<-pivot_wider(df.proteome.stat2,id_cols=Precursor.Id,
+	names_from=Time, values_from=c(n1,n2, statistic,p, p.adj,p.signif))
+write_csv(df.proteome.stat2.wider, 
+	file=here(output.dir,"stat_proteome_conserved_reformatted.csv"))
+
+
+
 
 #now here we remove the one with too few repeats due 
 # to undetected.
@@ -158,6 +184,13 @@ df.secreteome.stat2<- df.secreteome2 %>%
 
 
 saveRDS(df.secreteome.stat2, file=here(output.dir,"stat_secrete_conserved.Rds"))
-
+#df.secreteome.stat2<-readRDS(file=here(output.dir,"stat_secrete_conserved.Rds"))
 write_csv(df.secreteome.stat2, 
 	file=here(output.dir,"stat_secrete_conserved.csv"))
+
+#reformat to wider 
+df.secreteome.stat2.wider<-pivot_wider(df.secreteome.stat2,id_cols=Precursor.Id,
+	names_from=Time, values_from=c(n1,n2, statistic,p, p.adj,p.signif))
+write_csv(df.secreteome.stat2.wider, 
+	file=here(output.dir,"stat_secreteome_conserved_reformatted.csv"))
+
