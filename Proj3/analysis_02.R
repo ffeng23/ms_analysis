@@ -75,7 +75,7 @@ df2$Modified.Sequence2<-df2$Modified.Sequence
 
 #now let's find for each unique stripped sequence what are the possible modifications 
 # with mods[2]
-runModStats(dt=df2, output.dir, out.file)
+runModStats(dt=df2, output.dir, out.file, m=m, quantity.field="Ms1.Area")
 
 
 ########################################################3
@@ -123,7 +123,7 @@ df2$Modified.Sequence2<-df2$Modified.Sequence
 		##################end of don't run section###########
 #now let's find for each unique stripped sequence what are the possible modifications 
 # with mods[2]
-runModStats(dt=df2, output.dir, out.file)
+runModStats(dt=df2, output.dir, out.file,m, quantity.field="Ms1.Area")
 
 
 
@@ -171,13 +171,28 @@ df2$Modified.Sequence <- sub(pattern="^_",
 			sub(pattern="_\\.[0-9]*$",
 				replacement="") 
 df2$Modified.Sequence <- 
-		gsub(pattern="\\[\\]",
+		gsub(pattern="\\[(Carbamidomethyl|Oxidation) \\([CM]+\\)\\]",
 			x=df2$Modified.Sequence,"")
 
 ##
 # first we need to go through the modified sequences to get
 # all possible modifications
-mseq<-str_extract_all(pattern="\\[[a-zA-Z0-9]+\\]",
+mseq<-str_extract_all(pattern="\\[[a-zA-Z0-9]+\\s*\\([A-Z]+\\)\\]",
 			string=df2$Modified.Sequence )
 
 mods<-unique(unlist(mseq))
+
+#with only DEPC(H) we can run
+
+m<-mods[1]
+out.file<-paste0(out.file0, "_",m,"_spectronaut_H1.csv")
+df2$Modified.Sequence2<-df2$Modified.Sequence
+		#get rid of mod[1] "(DEPC)", since we want to study "Fumi"
+		# don't need to do this now.
+		#  Don't RUN
+			df2$Modified.Sequence2<-gsub(pattern=m_remove,
+						x=df2$Modified.Sequence,"", fixed=T)
+		##################end of don't run section###########
+#now let's find for each unique stripped sequence what are the possible modifications 
+# with mods[2]
+runModStats(dt=df2, output.dir, out.file, m, quantity.field="MS2Quantity")

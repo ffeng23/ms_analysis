@@ -3,8 +3,9 @@
 
 #now let's find for each unique stripped sequence what are the possible modifications 
 # with mods[2]
-runModStats<-function(dt, output.dir, out.file)
+runModStats<-function(dt, output.dir, out.file, m,  quantity.field="Ms1.Area")
 {
+	m_char<-substr(m,1,1)
 	sink(file=here(output.dir,out.file),append=F)
 	cat("Modification stat for ",m ,"\n")
 	sink()
@@ -22,7 +23,7 @@ runModStats<-function(dt, output.dir, out.file)
 		temp_df<-dt[temp,]
 		#we need to figure out the unique different modification on different
 		# amino acids
-		m_indices<-gregexpr(text=temp_df$Modified.Sequence2, pattern="(",fixed=T)
+		m_indices<-gregexpr(text=temp_df$Modified.Sequence2, pattern=m_char,fixed=T)
 		
 		#now we need to figure out the stripped sequence index of modified aa
 		m_indices_raw<-lapply(m_indices, FUN=
@@ -58,7 +59,7 @@ runModStats<-function(dt, output.dir, out.file)
 				#mutate(Modified=grepl(pattern=m_string_start,x=Modified.Sequence2, fixed=T)) %>%
 				mutate_at(c("Run2","Run","Repeat", "Modified"), as.factor) %>% 
 				group_by(Run2, Repeat, Modified, .drop=F) %>% 
-				summarize(Mod_Level=sum(Ms1.Area)
+				summarize(Mod_Level=sum(get(quantity.field))
 					)
 			stats2 <- stats %>% 
 				#mutate(Modified=grepl(pattern=m_string_start,x=Modified.Sequence2, fixed=T)) %>%
