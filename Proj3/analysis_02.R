@@ -1,4 +1,4 @@
-# R code to do analysis of MS data with T cell in vitro
+# R code to do analysis of MS data with modifications
 #
 #----- 7/26/23 ---
 #  copied from analysis_01.R to do the second run of analysis
@@ -63,7 +63,7 @@ mods<-unique(unlist(mseq))
 #we know now it is two. we get rid of the first one and do the second one and 
 #m_remove<-mods[2]
 m<-mods[1]
-out.file<-paste0(out.file0, "_",m,"_run2.csv")
+out.file<-paste0(out.file0, "_DIANN_",m,"_run2.csv")
 df2$Modified.Sequence2<-df2$Modified.Sequence
 		#get rid of mod[1] "(DEPC)", since we want to study "Fumi"
 		# don't need to do this now.
@@ -113,7 +113,7 @@ mods<-unique(unlist(mseq))
 #we know now it is two. we get rid of the first one and do the second one and 
 #m_remove<-mods[2]
 m<-mods[1]
-out.file<-paste0(out.file0, "_",m,"_aa6_run2.csv")
+out.file<-paste0(out.file0, "_DIANN_",m,"_aa6_run2.csv")
 df2$Modified.Sequence2<-df2$Modified.Sequence
 		#get rid of mod[1] "(DEPC)", since we want to study "Fumi"
 		# don't need to do this now.
@@ -130,9 +130,11 @@ runModStats(dt=df2, output.dir, out.file,m, quantity.field="Ms1.Area")
 
 
 ####################################
-#now doing DEPC
+#
+#    now doing DEPC for spectronaut
+#
 ####################################
-
+###For H1################
 df.spectr.H1 <- diann_load(here(input.dir,"Spectronaut_VISTAmodifications_DEPC(H)_Report.tsv"))
 
 
@@ -186,6 +188,73 @@ mods<-unique(unlist(mseq))
 
 m<-mods[1]
 out.file<-paste0(out.file0, "_",m,"_spectronaut_H1.csv")
+df2$Modified.Sequence2<-df2$Modified.Sequence
+		#get rid of mod[1] "(DEPC)", since we want to study "Fumi"
+		# don't need to do this now.
+		#  Don't RUN
+			df2$Modified.Sequence2<-gsub(pattern=m_remove,
+						x=df2$Modified.Sequence,"", fixed=T)
+		##################end of don't run section###########
+#now let's find for each unique stripped sequence what are the possible modifications 
+# with mods[2]
+runModStats(dt=df2, output.dir, out.file, m, quantity.field="MS2Quantity")
+
+##################################
+###For 6aa              ################
+###################################
+df.spectr.H6 <- diann_load(here(input.dir,"Spectronaut_VISTAmodifications_DEPC_Report.tsv"))
+
+
+
+#reformat to get longer
+df2<- df.spectr.H6 %>% select(!ends_with("EG.TotalQuantity (Settings)")) %>% 
+	select(!contains("06302023")) %>%
+	pivot_longer(cols=contains("DIA_iRT"), names_to="Run",values_to="MS2Quantity")
+
+df2<-df2 %>% rename(`Protein.Group`="PG.ProteinGroups",
+		#"Protein.Ids","Protein.Names",
+		Genes="PG.Genes", 
+		#"PG.MaxLFQ",
+		#"Genes.MaxLFQ", "Modified.Sequence", 
+		`Stripped.Sequence`="PEP.StrippedSequence", 
+		`Precursor.Id`="EG.PrecursorId"
+		#,"Precursor.Normalised", 
+		#"Ms1.Area" 
+		) %>% mutate(`Modified.Sequence`=`Precursor.Id`)
+
+#parse out the condition/grouping info from the field of Run
+df2$Run2<-sub(df2$Run, pattern=".raw.PEP.MS2Quantity",fixed=T,replacement="")
+df2$Run2<-sub(df2$Run2, pattern="_[0-9]+$",replacement="") #<-get rid of date, trailing 
+df2$Repeat<-substr(df2$Run2, nchar(df2$Run2), nchar(df2$Run2)) #<- get repeat number
+df2$Run2<-sub(df2$Run2,pattern="\\-[1-3]{1}$", replacement="") #<- get rid of repeat number
+
+df2$Run2<-sub(df2$Run2,pattern="^\\[[0-9]+\\] DIA_iRT_", replacement="") #<- get rid of leading "DIA_iRT"
+
+
+
+#new remove other modifications (not DEPC)
+
+#get rid of Unimod:4 which we don't want to take care of in this round
+df2$Modified.Sequence <- sub(pattern="^_",
+			x=df2$Modified.Sequence,replacement="") %>% 
+			sub(pattern="_\\.[0-9]*$",
+				replacement="") 
+df2$Modified.Sequence <- 
+		gsub(pattern="\\[(Carbamidomethyl|Oxidation) \\([CM]+\\)\\]",
+			x=df2$Modified.Sequence,"")
+
+##
+# first we need to go through the modified sequences to get
+# all possible modifications
+mseq<-str_extract_all(pattern="\\[[a-zA-Z]+\\]",
+			string=df2$Modified.Sequence )
+
+mods<-unique(unlist(mseq))
+
+#with only DEPC(H) we can run
+
+m<-mods[1]
+out.file<-paste0(out.file0, "_",m,"_spectronaut_aa6.csv")
 df2$Modified.Sequence2<-df2$Modified.Sequence
 		#get rid of mod[1] "(DEPC)", since we want to study "Fumi"
 		# don't need to do this now.
