@@ -6,19 +6,21 @@
 runModStats<-function(dt, output.dir, out.file, m,  quantity.field="Ms1.Area")
 {
 	m_char<-substr(m,1,1)
-	sink(file=here(output.dir,out.file),append=F)
+	sink(file=here(output.dir,paste0(out.file,"_run2.csv")),append=F)
 	cat("Modification stat for ",m ,"\n")
 	sink()
 	#ss<-unique(df2$Stripped.Sequence)[1]
 	#ss<-"FKVATPYSLYVCPEGQNVTLTCR" 
 	#ss<-"FKVATPYSLYVCPEGQNVTLTCRLLGPVDK"
+	#ss<-"GEVQTCSERRPIRQLTFQDLHLHHGGHQAAQTSHDLAQR"
+	results<-data.frame()
 	for(ss in unique(dt$Stripped.Sequence))
 	{
-		cat("doing peptide sequence:",ss,".....\n")
-		sink(file=here(output.dir,out.file),append=T)
-		cat("'=================\n")
-		cat("Peptide sequence ",ss ,"\n")
-		sink()
+#		cat("doing peptide sequence:",ss,".....\n")
+#		sink(file=here(output.dir,out.file),append=T)
+#		cat("'=================\n")
+#		cat("Peptide sequence ",ss ,"\n")
+#		sink()
 		temp<-which(dt$Stripped.Sequence==ss)
 		temp_df<-dt[temp,]
 		#we need to figure out the unique different modification on different
@@ -72,21 +74,37 @@ runModStats<-function(dt, output.dir, out.file, m,  quantity.field="Ms1.Area")
 				group_by (Run2) %>% 
 				summarize(mean=mean(pct), std=sd(pct)) 
 
-			sink(file=here(output.dir,out.file),append=T)
-				cat("'***************\n")
-				cat("\tModification at position ",m_raw ,"\n")
-				cat("\tModified sequence:", m_string,"\n")
-				write.csv(stats2)
-				cat("\tnote: Mod_Level is the sum of Ms1.Area; pct is % of the total.\n")
-				write.csv(stats3)
-				cat("\tnote: mean is the mean % of 3 replicates; and sd is the standard deviation.\n")
+			stats4<-stats3
+			stats4$Sequence<-m_string
+			results<-rbind(results,stats4)
+#			sink(file=here(output.dir,out.file),append=T)
+#				cat("'***************\n")
+#				cat("\tModification at position ",m_raw ,"\n")
+#				cat("\tModified sequence:", m_string,"\n")
+#				write.csv(stats2)
+#				cat("\tnote: Mod_Level is the sum of Ms1.Area; pct is % of the total.\n")
+#				write.csv(stats3)
+#				cat("\tnote: mean is the mean % of 3 replicates; and sd is the standard deviation.\n")
 
-			sink()
+#			sink()
 			#this last step is very important: remove the modifications 
 			# this will make sure the patter in the following step 
 			# can be matched.
 			temp_df$Modified.Sequence2 <-sub(x=temp_df$Modified.Sequence2, 
 					pattern=m_string_start,replacement=substr(ss,1,m_raw), fixed=T)
 		} #end of inner loop
+
 	}# end of outer loop
+	r.mean<-results %>% pivot_wider(id_cols=Sequence,
+		names_from=Run2, values_from=mean,values_fill=0) 
+	r.std<-results %>% pivot_wider(id_cols=Sequence,
+		names_from=Run2, values_from=std,values_fill=0) 
+	
+	write.csv(r.mean, file=
+			here(output.dir,paste0(out.file,"_mean_reformat.csv"))
+		)
+	write.csv(r.std, file=
+			here(output.dir,paste0(out.file,"_std_reformat.csv"))
+			)
+
 }#end of function.

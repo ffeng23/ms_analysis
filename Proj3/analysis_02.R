@@ -63,7 +63,7 @@ mods<-unique(unlist(mseq))
 #we know now it is two. we get rid of the first one and do the second one and 
 #m_remove<-mods[2]
 m<-mods[1]
-out.file<-paste0(out.file0, "_DIANN_",m,"_run2.csv")
+out.file<-paste0(out.file0, "_DIANN_",m)
 df2$Modified.Sequence2<-df2$Modified.Sequence
 		#get rid of mod[1] "(DEPC)", since we want to study "Fumi"
 		# don't need to do this now.
@@ -113,7 +113,7 @@ mods<-unique(unlist(mseq))
 #we know now it is two. we get rid of the first one and do the second one and 
 #m_remove<-mods[2]
 m<-mods[1]
-out.file<-paste0(out.file0, "_DIANN_",m,"_aa6_run2.csv")
+out.file<-paste0(out.file0, "_DIANN_",m,"_aa6")
 df2$Modified.Sequence2<-df2$Modified.Sequence
 		#get rid of mod[1] "(DEPC)", since we want to study "Fumi"
 		# don't need to do this now.
@@ -187,7 +187,7 @@ mods<-unique(unlist(mseq))
 #with only DEPC(H) we can run
 
 m<-mods[1]
-out.file<-paste0(out.file0, "_",m,"_spectronaut_H1.csv")
+out.file<-paste0(out.file0, "_",m,"_spectronaut_H1")
 df2$Modified.Sequence2<-df2$Modified.Sequence
 		#get rid of mod[1] "(DEPC)", since we want to study "Fumi"
 		# don't need to do this now.
@@ -254,7 +254,7 @@ mods<-unique(unlist(mseq))
 #with only DEPC(H) we can run
 
 m<-mods[1]
-out.file<-paste0(out.file0, "_",m,"_spectronaut_aa6.csv")
+out.file<-paste0(out.file0, "_",m,"_spectronaut_aa6")
 df2$Modified.Sequence2<-df2$Modified.Sequence
 		#get rid of mod[1] "(DEPC)", since we want to study "Fumi"
 		# don't need to do this now.
