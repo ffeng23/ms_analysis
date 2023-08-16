@@ -106,8 +106,27 @@ saveRDS(df.stat, file=here(output.dir,"stat_CD4+T_fill_pivotData.Rds"))
 write_csv(df.stat, 
 	file=here(output.dir,"stat_CD4+T_fill_pivotData.csv"))
 
+#create summary statistics like means 
+items.means<-	df.clean2 %>%
+	#arrange(Stripped.Sequence, Time, Treatment)
+	group_by(Protein.Group, Genes,  Time, Treatment ) %>%
+	summarize(mean=mean(y), samplesize=n()) #%>% View("samplesize")
 
+items.means.wide <- pivot_wider(items.means,
+	id_cols=c("Protein.Group","Genes","Time"),
+	names_from=c(Treatment), values_from=c(mean, samplesize))
 
+items.all<- df.stat %>% left_join(items.means.wide)
+
+items.all.wide <- items.all %>% 
+	mutate_at(c("group1", "group2"), as.factor) %>%
+	pivot_wider(
+		id_cols=c("Protein.Group","Genes"),
+		names_from=c(Time,group1, group2), values_from=c(n1,n2, 
+			statistic,p, p.adj,p.signif, p.adj.signif,
+			mean_Control, mean_VISTA, `mean_VISTA-SNS101`)
+
+	)
 
 
 df.proteome.stat.wider<-pivot_wider(df.proteome.stat,id_cols=c("Protein.Group","Genes"),
