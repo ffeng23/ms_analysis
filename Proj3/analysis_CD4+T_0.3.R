@@ -27,6 +27,8 @@ library(tidyr)
 library(diann)
 library(readr)
 library(pheatmap)
+library(openxlsx)
+library(rstatix)
 
 
 data.dir<-"Proj3/Data"
@@ -69,7 +71,6 @@ df.clean <- df.long %>% dplyr::select(c("Run","Protein.Group",
 df.clean<-df.clean %>% replace(is.na(.),0)
 
 # do analysis for df.proteome
-library(rstatix)
 #now do t-test for each protein group
 #
 #df.proteome<-df.proteome %>% 
@@ -92,19 +93,55 @@ items.stat<-	df.clean2 %>%
 # join/merge to have repeats (raw data to do stats)
 items.stat2<- items.stat %>% left_join(df.clean2)
 
+
 system.time(
 
 df.stat<- items.stat2 %>%
 	group_by(Protein.Group, Genes,  Time ) %>%
-	t_test(y ~ Treatment) %>%
+	t_test(y ~ Treatment,detailed=T) %>% #View()
 	adjust_pvalue(method="BH") %>%
   	add_significance("p")
 )
-saveRDS(df.stat, file=here(output.dir,"stat_CD4+T_fill_pivotData.Rds"))
 
-#df.proteome.stat<-readRDS(file=here(output.dir,"stat_proteome_fill.Rds"))
-write_csv(df.stat, 
+df.sumstat<- items.stat2 %>%
+	group_by(Protein.Group, Genes,  Time, Treatment ) %>%
+	get_summary_stats(y, type="common") 
+
+#saveRDS(df.sumstat, file=here(output.dir,"summary_stat_CD4+T_fill_pivotData.Rds"))
+df.sumstat<-readRDS(file=here(output.dir,"summary_stat_CD4+T_fill_pivotData.Rds"))
+
+df.sumstat <- df.sumstat %>% dplyr::select(
+	Protein.Group,Genes,Time,Treatment,mean
+	)
+
+df.stat.m1<-df.stat %>% left_join(df.sumstat, 
+	by=c("Protein.Group","Genes", "Time", "group1" = "Treatment")) %>% 
+	rename(mean1=mean)
+df.stat.m2<-df.stat.m1 %>% left_join(df.sumstat, 
+	by=c("Protein.Group","Genes", "Time", "group2" = "Treatment")) %>% 
+	rename(mean2=mean)
+
+saveRDS(df.stat.m2, file=here(output.dir,"stat_CD4+T_fill_pivotData.Rds"))
+#df.stat.m2<- readRDS(file=here(output.dir,"stat_CD4+T_fill_pivotData.Rds"))
+
+write_csv(df.stat.m2, 
 	file=here(output.dir,"stat_CD4+T_fill_pivotData.csv"))
+
+#rewrite it into wider 
+df.stat.m2.wider <- df.stat.m2 %>% 
+	mutate(Time=paste0(Time,"hrs")) %>%
+	pivot_wider(id_cols=c("Protein.Group","Genes"),
+			names_from=c(Time,group1, group2),
+			values_from=c( n1, n2,
+					statistic,df,p, p.adj, p.signif,
+					p.adj.signif, mean1, mean2
+				),
+			names_vary="slowest"
+		)
+write_csv(df.stat.m2.wider, 
+	file=here(output.dir,"stat_CD4+T_fill_pivotData_wider.csv"))
+
+
 
 #create summary statistics like means 
 items.means<-	df.clean2 %>%
@@ -116,7 +153,7 @@ items.means.wide <- pivot_wider(items.means,
 	id_cols=c("Protein.Group","Genes","Time"),
 	names_from=c(Treatment), values_from=c(mean, samplesize))
 
-items.all<- df.stat %>% left_join(items.means.wide)
+items.all<- df.stat.m2 #df.stat %>% left_join(items.means.wide)
 
 items.all.wide <- items.all %>% 
 	mutate_at(c("group1", "group2"), as.factor) %>%
@@ -124,11 +161,107 @@ items.all.wide <- items.all %>%
 		id_cols=c("Protein.Group","Genes"),
 		names_from=c(Time,group1, group2), values_from=c(n1,n2, 
 			statistic,p, p.adj,p.signif, p.adj.signif,
-			mean_Control, mean_VISTA, `mean_VISTA-SNS101`)
+			mean1, mean2)
 
 	)
 
+#now let's do it by time for showing stats as output
+#
+times<-c(0.5, 2, 6, 12, 24)
+wb <- createWorkbook("Feng")
 
+for(ts in times)
+{
+	tmp<-items.all %>% 
+		dplyr::filter(Time==ts) #%>% 
+	addWorksheet(wb, sheetName=paste0(ts,"hrs"))
+	writeData(wb, x=tmp, 
+		sheet=paste0(ts,"hrs"))
+
+}
+
+saveWorkbook(wb,file=here(output.dir, "stats.xlsx"),
+	 overwrite = TRUE) 
+
+#now let's work on generating data to do trend,
+# we basically split the data into vista-control
+#  and vista-sns101 - control
+trend.vista<-items.means.wide %>% 
+	dplyr::select(!starts_with("samplesize")) %>%
+	dplyr::select(!contains("VISTA-SNS101")) %>% 
+	mutate(fc= mean_VISTA - mean_Control)
+
+trend.vista.wide<-trend.vista %>% pivot_wider(
+		id_cols=c(Protein.Group,Genes), 
+		values_from=fc, names_from=Time
+	) %>% mutate("0"=0) %>% relocate("0",.before="0.5")
+trend.vista.wide$"0"<-#trend.vista.wide$"0"+
+	rnorm(length(trend.vista.wide$"0"),0,0.000001)
+	
+pdf(file=here(output.dir,"VISTAeffect_raw_hier.pdf"),
+	width=7, height=7)
+v_h<-pheatmap(trend.vista.wide[,-c(1,2)], scale="none",
+	cluster_cols=FALSE,# cluster_row=F
+	labels_column=paste0(names(trend.vista.wide[,-c(1,2)]),"hrs"),
+	show_rownames=F
+	)
+dev.off()
+pdf(file=here(output.dir,"VISTAeffect_kmean.pdf"),
+	width=7, height=4)
+v_k<-pheatmap(trend.vista.wide[,-c(1,2)], scale="none",
+	cluster_cols=FALSE, kmeans_k=10#, 
+	#filename=here(output.dir,"VISTAeffect_kmean.pdf")
+	)
+dev.off()
+trend.vista.wide$clusters=v_k$kmeans$cluster
+clusters.vista<-trend.vista.wide[
+		order(trend.vista.wide$clusters),
+		c("Protein.Group","Genes","clusters")]
+write_csv(clusters.vista,
+	file=here(output.dir,"kmean_cluster_vista.csv"))
+
+
+
+trend.vista_sns101<-items.means.wide %>% 
+	dplyr::select(!starts_with("samplesize")) %>%
+	dplyr::select(-`mean_VISTA`) %>% 
+	mutate(fc= `mean_VISTA-SNS101` - mean_Control)
+
+trend.vista_sns101.wide<-trend.vista_sns101 %>% pivot_wider(
+		id_cols=c(Protein.Group,Genes), 
+		values_from=fc, names_from=Time
+	) %>% mutate("0"=0) %>% relocate("0",.before="0.5")
+trend.vista_sns101.wide$"0"<-#trend.vista.wide$"0"+
+	rnorm(length(trend.vista.wide$"0"),0,0.000001)
+
+pdf(file=here(output.dir,"VISTA_SNS101_effect_hier.pdf"),
+	width=7, height=7)
+pheatmap(trend.vista_sns101.wide[,-c(1,2)], scale="none",
+	cluster_cols=FALSE, #cluster_row=F
+	labels_column=paste0(names(trend.vista_sns101.wide[,-c(1,2)]),"hrs"),
+	show_rownames=F
+	)
+dev.off()
+pdf(file=here(output.dir,"VISTA_SNS101_effect_kmean.pdf"),
+	width=7, height=4)
+vs_k<-pheatmap(trend.vista_sns101.wide[,-c(1,2)], scale="none",
+	cluster_cols=FALSE, kmeans_k=8
+	)
+dev.off()
+
+trend.vista_sns101.wide$clusters=vs_k$kmeans$cluster
+clusters.vista_sns101<-trend.vista_sns101.wide[
+		order(trend.vista_sns101.wide$clusters),
+		c("Protein.Group","Genes","clusters")]
+write_csv(clusters.vista_sns101,
+	file=here(output.dir,"kmean_cluster_vistasns101.csv"))
+
+
+
+
+	######################################
+	#       left-over from previous     ##
+	########################################
 df.proteome.stat.wider<-pivot_wider(df.proteome.stat,id_cols=c("Protein.Group","Genes"),
 	names_from=Time, values_from=c(n1,n2, statistic,p, p.adj,p.signif))
 write_csv(df.proteome.stat.wider, 
