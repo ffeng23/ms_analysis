@@ -258,6 +258,47 @@ write_csv(clusters.vista_sns101,
 
 
 
+		#### sns101 vs vista
+trend.vista_vs_sns101<-items.means.wide %>% 
+	dplyr::select(!starts_with("samplesize")) %>%
+	dplyr::select(-`mean_Control`) %>% 
+	mutate(fc= `mean_VISTA-SNS101` - mean_VISTA)
+
+trend.vista_vs_sns101.wide<-trend.vista_vs_sns101 %>% 
+	pivot_wider(
+		id_cols=c(Protein.Group,Genes), 
+		values_from=fc, names_from=Time
+	) %>% mutate("0"=0) %>% relocate("0",.before="0.5")
+
+trend.vista_vs_sns101.wide$"0"<-#trend.vista.wide$"0"+
+	rnorm(length(trend.vista_vs_sns101.wide$"0"),0,0.000001)
+
+pdf(file=here(output.dir,"VISTA_vs_SNS101_effect_hier.pdf"),
+	width=7, height=7)
+pheatmap(trend.vista_vs_sns101.wide[,-c(1,2)], scale="none",
+	cluster_cols=FALSE, #cluster_row=F
+	labels_column=paste0(names(trend.vista_vs_sns101.wide[,-c(1,2)]),"hrs"),
+	show_rownames=F
+	)
+dev.off()
+pdf(file=here(output.dir,"VISTA_vs_SNS101_effect_kmean.pdf"),
+	width=7, height=4)
+vs_k<-pheatmap(trend.vista_vs_sns101.wide[,-c(1,2)], scale="none",
+	cluster_cols=FALSE, kmeans_k=8
+	)
+dev.off()
+
+trend.vista_vs_sns101.wide$clusters=vs_k$kmeans$cluster
+clusters.vista_vs_sns101<-trend.vista_vs_sns101.wide[
+		order(trend.vista_vs_sns101.wide$clusters),
+		c("Protein.Group","Genes","clusters")]
+write_csv(clusters.vista_vs_sns101,
+	file=here(output.dir,"kmean_cluster_vistasns101_vs_vista.csv"))
+
+
+
+
+
 
 	######################################
 	#       left-over from previous     ##
