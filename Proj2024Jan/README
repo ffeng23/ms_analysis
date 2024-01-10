@@ -1,0 +1,17 @@
+# README
+
+Jan 9, 2024
+
+Mass Spec project for CD8 T cells.
+
+3 groups (SNS101, VISTA, and control)
+
+and 4 time points.
+
+# Analysis
+
+1) between-group within time point comparison
+2) cluster and group for time series patterns
+
+
+
