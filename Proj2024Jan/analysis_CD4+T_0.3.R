@@ -126,7 +126,7 @@ df.stat<- items.stat2 %>%
 )
 
 saveRDS(df.stat, file=here(output.dir,"summary_t_test_CD8+T_fill_pivotData.Rds"))
-
+#df.stat<-readRDS( file=here(output.dir,"summary_t_test_CD8+T_fill_pivotData.Rds"))
 
 df.sumstat<- items.stat2 %>%
 	group_by(Protein.Group, Genes,  Time, Treatment ) %>%
@@ -144,7 +144,8 @@ df.stat.m1<-df.stat %>% left_join(df.sumstat,
 	by=c("Protein.Group","Genes", "Time", "group1" = "Treatment")) %>% 
 	rename(mean1=mean)
 df.stat.m2<-df.stat.m1 %>% left_join(df.sumstat, 
-	by=c("Protein.Group","Genes", "Time", "group2" = "Treatment")) %>% 
+	by=c("Protein.Group","Genes", "Time", 
+		"group2" = "Treatment")) %>% 
 	rename(mean2=mean)
 
 saveRDS(df.stat.m2, file=here(output.dir,"stat_CD8+T_fill_pivotData.Rds"))
@@ -156,16 +157,24 @@ write_csv(df.stat.m2,
 #rewrite it into wider 
 df.stat.m2.wider <- df.stat.m2 %>% 
 	mutate(Time=paste0(Time,"hrs")) %>%
+	rename(foldchange=estimate) %>%
 	pivot_wider(id_cols=c("Protein.Group","Genes"),
-			names_from=c(Time,group1, group2),
-			values_from=c( n1, n2,
-					statistic,df,p, p.adj, p.signif,
-					p.adj.signif, mean1, mean2
+			names_from=c(group1, group2,Time),
+			values_from=c( #n1, n2, 
+					foldchange,
+					#statistic,df,p, 
+					p.adj#, #p.signif,
+					#p.adj.signif, mean1, mean2, 
 				),
-			names_vary="slowest"
-		)
+			names_vary="slowest",
+			names_glue="{Time}_{group1}/{group2}_{.value}"
+		) 
+df.stat.m2.wider <- df.stat.m2.wider [,c(1,2,
+		3,4,9,10, 15,16,21,22,27:28,
+		5:6,11:12,17:18,23:24,29:30,
+		7:8,13:14,19:20,25:26,31:32)]
 write_csv(df.stat.m2.wider, 
-	file=here(output.dir,"stat_CD8+T_fill_pivotData_wider.csv"))
+	file=here(output.dir,"stat_CD8+T_fill_pivotData_wider_reformat.csv"))
 
 
 
