@@ -104,7 +104,7 @@ df.clean2<- df.clean %>%
 	group_by( Protein.Group, Genes, Time, Treatment, Repeat,.drop=T) %>%
 	summarize(y=mean(PG.MaxLFQ)) %>% 
 	replace(is.na(.),0) %>%
-	mutate(y=log(y+1))
+	mutate(y=log2(y+1))
 
 #show the sample size and remove the one without repeats
 items.stat<-	df.clean2 %>%
@@ -232,6 +232,10 @@ trend.vista.wide<-trend.vista %>% pivot_wider(
 	) %>% mutate("0"=0) %>% relocate("0",.before="0.5")
 trend.vista.wide$"0"<-#trend.vista.wide$"0"+
 	rnorm(length(trend.vista.wide$"0"),0,0.000001)
+
+#save 
+saveRDS(trend.vista.wide, 
+	file=here(output.dir,"Trend.vista_vs_ctrl.RDS"))
 	
 pdf(file=here(output.dir,"VISTAeffect_raw_hier.pdf"),
 	width=7, height=7)
@@ -297,6 +301,8 @@ trend.vista_sns101.wide<-trend.vista_sns101 %>% pivot_wider(
 trend.vista_sns101.wide$"0"<-#trend.vista.wide$"0"+
 	rnorm(length(trend.vista.wide$"0"),0,0.000001)
 
+saveRDS(trend.vista_sns101.wide, 
+	file=here(output.dir,"Trend.vistaSns101_vs_ctrl.RDS"))
 pdf(file=here(output.dir,"VISTA_SNS101_effect_hier.pdf"),
 	width=7, height=7)
 pheatmap(trend.vista_sns101.wide[,-c(1,2)], scale="none",
@@ -364,6 +370,9 @@ trend.vista_vs_sns101.wide<-trend.vista_vs_sns101 %>%
 
 trend.vista_vs_sns101.wide$"0"<-#trend.vista.wide$"0"+
 	rnorm(length(trend.vista_vs_sns101.wide$"0"),0,0.000001)
+
+saveRDS(trend.vista_vs_sns101.wide, 
+	file=here(output.dir,"Trend.vista_vs_vistaSNS101.RDS"))
 
 pdf(file=here(output.dir,"VISTA_vs_SNS101_effect_hier.pdf"),
 	width=7, height=7)

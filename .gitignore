@@ -8,3 +8,10 @@
 *.pptx
 *.xlsx
 *.odp
+
+# added to ignor html output of ipynb
+*.html
+
+# Rdata set
+*.RDS
+*.[Rdata|RData]

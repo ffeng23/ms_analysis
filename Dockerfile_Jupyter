@@ -1,0 +1,67 @@
+FROM jupyter/r-notebook:r-4.2.2
+
+USER root
+RUN sudo apt-get update && apt-get install -y --no-install-recommends libxt6 \
+    && apt-get install -y libz-dev sudo software-properties-common \
+    && apt-get install -y libfontconfig1-dev \
+    && apt-get install -y libfribidi-dev \
+    && apt-get install -y libfreetype6-dev libtiff5-dev libjpeg-dev \
+    && apt-get install -y --no-install-recommends libxml2-dev libtcl8.6 tcl8.6 tcl8.6-dev libtk8.6 tk8.6 tk8.6-dev
+
+RUN apt-get update -qq && apt-get -y --no-install-recommends install cmake pandoc libpng-dev make libssl-dev libfreetype6-dev libfribidi-dev libharfbuzz-dev libfontconfig1-dev python3 libcurl4-openssl-dev libglu1-mesa-dev libgl1-mesa-dev zlib1g-dev libgmp3-dev libmpfr-dev libicu-dev
+
+#RUN add-apt-repository ppa:dns/gnu && apt-get update -qq && apt-get -y --no-install-recommends #install libgsl-dev
+
+USER ${NB_USER}
+RUN mamba install -c conda-forge --yes --freeze-installed pkg-config make cmake autoconf gsl pandoc proj4 && \
+    mamba clean --all -f -y && \
+    fix-permissions "${CONDA_DIR}" && \
+    fix-permissions "/home/${NB_USER}"
+
+
+
+RUN R -e "install.packages(c('renv'), repos = c(CRAN = 'https://cloud.r-project.org'))"
+#RUN R -e "install.packages('https://cran.r-project.org/src/contrib/Archive/curl/curl_5.1.0.tar.gz')"
+# approach two
+# to set up the 
+
+WORKDIR /home/${NB_USER}/ms_analysis
+COPY renv.lock renv.lock
+#COPY renv.lock /home/renv.lock
+RUN  mkdir -p renv
+
+COPY .Rprofile .Rprofile
+COPY renv/activate.R renv/activate.R
+#COPY renv/settings.json renv/settings.json
+
+COPY renv/settings.dcf renv/settings.dcf
+
+#DOn't copy too many file over. We will do this later for deployment
+# at this stage, we will map the developing folder and have everything.
+#COPY . ./
+#COPY *.ipynb ./
+#COPY subfolder ./subfolder
+COPY READ* ./
+#COPY R_code/* R_code/
+
+# Note for above, we don't have renv/settings.json somehow (?),
+# it is not necessary!!! we could just need .Rprofile and activate.R and renv.lock
+#
+
+#change owner ship to rstudio, RECURSIVELY with -R
+# and then restor the renv library as the user "rstudio"
+#RUN chown -R rstudio .
+USER root
+RUN chown -R ${NB_USER} .
+
+USER ${NB_USER}
+RUN R -e "renv::settings\$use.cache(FALSE);renv::restore()"
+ 
+
+RUN echo "renv::settings\$use.cache()" > /home/${NB_USER}/.Rprofile
+#RUN sudo -u rstudio echo "setwd(\"/home/${NB_USER}/IHC_proximity/\")" > /home/${NB_USER}/.Rprofile
+
+#RUN sudo -u rstudio echo "renv::load()" >> /home/rstudio/.Rprofile 
+#    && echo ".rs.restartR()" >>/home/rstudio/.Rprofile 
+#COPY * ./
+
