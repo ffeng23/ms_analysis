@@ -7,8 +7,11 @@ services:
     build: 
         context: .
         dockerfile: Dockerfile_Jupyter
+        args:
+           NB_USER_NEW: "feng"
+           NB_UID_NEW: "1000"
+    #image: ffeng23/ms_analysis
     
-    image: ms_analysis
     # #Do this to get latest one from pushed images online.
     #image: ffeng23/ihc_proximity_jupyter
     #environment:
@@ -25,21 +28,44 @@ services:
     #.env
     # UID=1005 
     #
-    environment:
-       NB_USER: "feng"
-       NB_UID: 1000
-       CHOWN_HOME: yes
-       
+    #environment:
+    #    NB_USER: "feng"
+    #    NB_UID: 1000
+    #    CHOWN_HOME: yes
+    #CHOWN_HOME_OPTS: '-R'
+    #   NB_GID : 1000
+    #   NB_GROUP: "feng"
+    #do it on my own
+    
+    entrypoint: 
+       - /bin/bash
+       - -c
+       - |
+         echo "export PATH=/opt/conda/bin:$$PATH" >> /home/feng/.bashrc
+         echo "run........"
+         source .bashrc 
+         apt-get install -y gosu
+         gosu feng jupyter-lab --ip 0.0.0.0 --port 8888 --no-browser --allow-root
+         
+         
+    
     user : root   
 
     ports:
        - 8888:8888
        
-    #working_dir: /main
+    working_dir: /home/feng/
     volumes:
       - .:/home/feng/ms_analysis
-    #stdin_open: true 
-    #tty: true
+      #- vol_ihc_jupyter:/home/feng/ms_analysis
+    stdin_open: true 
+    tty: true
 
 volumes:
     vol_ihc_jupyter:
+    
+## to call it.
+# run the following
+# docker compose -f docker-compose_Jupyter.yml up -d
+# docker compose -f docker-compose_Jupyter.yml exec ms_analysis su - feng 
+# this will

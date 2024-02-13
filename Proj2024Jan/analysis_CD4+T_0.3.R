@@ -43,7 +43,8 @@ library(rstatix)
 data.dir<-"Proj2024Jan"
 output.dir<-"Proj2024Jan"
 
-source("functions.R")
+source(here("functions.R"))
+
 
 #read the data
 df <- diann_load(here(data.dir,
@@ -149,7 +150,7 @@ df.stat.m2<-df.stat.m1 %>% left_join(df.sumstat,
 	rename(mean2=mean)
 
 saveRDS(df.stat.m2, file=here(output.dir,"stat_CD8+T_fill_pivotData.Rds"))
-#df.stat.m2<- readRDS(file=here(output.dir,"stat_CD4+T_fill_pivotData.Rds"))
+#df.stat.m2<- readRDS(file=here(output.dir,"stat_CD8+T_fill_pivotData.Rds"))
 
 write_csv(df.stat.m2, 
 	file=here(output.dir,"stat_CD8+T_fill_pivotData.csv"))
@@ -248,7 +249,7 @@ dev.off()
 pdf(file=here(output.dir,"VISTAeffect_kmean.pdf"),
 	width=7, height=4)
 v_k<-pheatmap(trend.vista.wide[,-c(1,2)], scale="none",
-	cluster_cols=FALSE, kmeans_k=10#, 
+	cluster_cols=FALSE, kmeans_k=18#, 
 	#filename=here(output.dir,"VISTAeffect_kmean.pdf")
 	)
 dev.off()
@@ -257,7 +258,7 @@ clusters.vista<-trend.vista.wide[
 		order(trend.vista.wide$clusters),
 		c("Protein.Group","Genes","clusters")]
 write_csv(clusters.vista,
-	file=here(output.dir,"kmean_cluster_vista.csv"))
+	file=here(output.dir,"kmean_cluster_vista_k18.csv"))
 
 #also draw line figures
 trend.vista.long<- trend.vista.wide %>%
@@ -267,7 +268,7 @@ trend.vista.long<- trend.vista.wide %>%
 		)
 
 trend.vista.long$clusters<-factor(trend.vista.long$clusters,
-		levels=c(1,2,3,4,5,6,7,8,9,10))
+		levels=c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18))
 trend.vista.long$time_point<-factor(trend.vista.long$time_point,
 		levels=c("0","0.5","2","6","12","24"))
 
@@ -276,7 +277,7 @@ trend.vista.long.summary<-trend.vista.long %>%
 	summarize(fc_mean=mean(fc_over_zero),
 		fc_median=median(fc_over_zero))
 
-pdf(file=here(output.dir,"VISTAeffect_kmean_lines.pdf"),
+pdf(file=here(output.dir,"VISTAeffect_kmean_lines_k18.pdf"),
 	width=10, height=6)
 ggplot(		
 	)+
@@ -314,7 +315,7 @@ dev.off()
 pdf(file=here(output.dir,"VISTA_SNS101_effect_kmean.pdf"),
 	width=7, height=4)
 vs_k<-pheatmap(trend.vista_sns101.wide[,-c(1,2)], scale="none",
-	cluster_cols=FALSE, kmeans_k=8
+	cluster_cols=FALSE, kmeans_k=18
 	)
 dev.off()
 
@@ -323,7 +324,7 @@ clusters.vista_sns101<-trend.vista_sns101.wide[
 		order(trend.vista_sns101.wide$clusters),
 		c("Protein.Group","Genes","clusters")]
 write_csv(clusters.vista_sns101,
-	file=here(output.dir,"kmean_cluster_vistasns101.csv"))
+	file=here(output.dir,"kmean_cluster_vistasns101_k18.csv"))
 
 #also draw line figures
 trend.vista_sns101.long<- trend.vista_sns101.wide %>%
@@ -333,7 +334,7 @@ trend.vista_sns101.long<- trend.vista_sns101.wide %>%
 		)
 
 trend.vista_sns101.long$clusters<-factor(trend.vista_sns101.long$clusters,
-		levels=c(1,2,3,4,5,6,7,8,9,10))
+		levels=c(1,2,3,4,5,6,7,8,9,10,11:18))
 trend.vista_sns101.long$time_point<-factor(trend.vista_sns101.long$time_point,
 		levels=c("0","0.5","2","6","12","24"))
 
@@ -342,7 +343,7 @@ trend.vista_sns101.long.summary<-trend.vista_sns101.long %>%
 	summarize(fc_mean=mean(fc_over_zero),
 		fc_median=median(fc_over_zero))
 
-pdf(file=here(output.dir,"VISTA_sns101effect_kmean_lines.pdf"),
+pdf(file=here(output.dir,"VISTA_sns101effect_kmean_lines_k18.pdf"),
 	width=10, height=6)
 ggplot(		
 	)+
@@ -385,7 +386,7 @@ dev.off()
 pdf(file=here(output.dir,"VISTA_vs_SNS101_effect_kmean.pdf"),
 	width=7, height=4)
 vs_k<-pheatmap(trend.vista_vs_sns101.wide[,-c(1,2)], scale="none",
-	cluster_cols=FALSE, kmeans_k=8
+	cluster_cols=FALSE, kmeans_k=15
 	)
 dev.off()
 
@@ -394,7 +395,7 @@ clusters.vista_vs_sns101<-trend.vista_vs_sns101.wide[
 		order(trend.vista_vs_sns101.wide$clusters),
 		c("Protein.Group","Genes","clusters")]
 write_csv(clusters.vista_vs_sns101,
-	file=here(output.dir,"kmean_cluster_vistasns101_vs_vista.csv"))
+	file=here(output.dir,"kmean_cluster_vistasns101_vs_vista_k15.csv"))
 
 #also draw line figures
 trend.vista_vs_sns101.long<- trend.vista_vs_sns101.wide %>%
@@ -404,7 +405,7 @@ trend.vista_vs_sns101.long<- trend.vista_vs_sns101.wide %>%
 		)
 
 trend.vista_vs_sns101.long$clusters<-factor(trend.vista_vs_sns101.long$clusters,
-		levels=c(1,2,3,4,5,6,7,8,9,10))
+		levels=c(1,2,3,4,5,6,7,8,9,10,11:15))
 trend.vista_vs_sns101.long$time_point<-factor(trend.vista_vs_sns101.long$time_point,
 		levels=c("0","0.5","2","6","12","24"))
 
@@ -413,7 +414,7 @@ trend.vista_vs_sns101.long.summary<-trend.vista_vs_sns101.long %>%
 	summarize(fc_mean=mean(fc_over_zero),
 		fc_median=median(fc_over_zero))
 
-pdf(file=here(output.dir,"VISTA_vs_sns101effect_kmean_lines.pdf"),
+pdf(file=here(output.dir,"VISTA_vs_sns101effect_kmean_lines_k15.pdf"),
 	width=10, height=6)
 ggplot(		
 	)+
