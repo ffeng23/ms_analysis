@@ -4,20 +4,23 @@ services:
     
     #the below section is for building the raw image 
     # from scratch. uncomment them if necessary.
-    build: 
-        context: .
-        dockerfile: Dockerfile_Jupyter
-        args:
-           NB_USER_NEW: "feng"
-           NB_UID_NEW: "1000"
-    #image: ffeng23/ms_analysis
+    #build: 
+    #    context: .
+    #    dockerfile: Dockerfile_Jupyter
+    #    args:
+    #       NB_USER_NEW: "feng"
+    #       NB_UID_NEW: "1000"
+    image: ffeng23/ms_analysis
     
     # #Do this to get latest one from pushed images online.
     #image: ffeng23/ihc_proximity_jupyter
-    #environment:
-    #    - user= feng
-    #    - uid= 1000
-    #    - gid= 1000
+    environment:
+        #- NB_USER= "feng"
+        - NB_UID= 1000
+        - gid= 1000
+        - CHOWN_HOME= yes
+        - CHOWN_HOME_OPT= '-R'
+        
     #command: bash
     
     #set the new user id 1005, so that the rstudio /init script 
@@ -37,15 +40,15 @@ services:
     #   NB_GROUP: "feng"
     #do it on my own
     
-    entrypoint: 
-       - /bin/bash
-       - -c
-       - |
-         echo "export PATH=/opt/conda/bin:$$PATH" >> /home/feng/.bashrc
-         echo "run........"
-         source .bashrc 
-         apt-get install -y gosu
-         gosu feng jupyter-lab --ip 0.0.0.0 --port 8888 --no-browser --allow-root
+    #entrypoint: 
+    #   - /bin/bash
+    #   - -c
+    #   - |
+    #     #echo "export PATH=/opt/conda/bin:$$PATH" >> /home/feng/.bashrc
+    #     echo "run........"
+    #     source .bashrc 
+    #     apt-get install -y gosu
+    #     gosu feng jupyter-lab --ip 0.0.0.0 --port 8888 --no-browser --allow-root
          
          
     
@@ -54,15 +57,15 @@ services:
     ports:
        - 8888:8888
        
-    working_dir: /home/feng/
+    #working_dir: /home/jovyan/
     volumes:
-      - .:/home/feng/ms_analysis
-      #- vol_ihc_jupyter:/home/feng/ms_analysis
+      - .:/home/jovyan/ms_analysis
+      - vol_msAnalysis_jupyter:/home/feng/ms_analysis/renv
     stdin_open: true 
     tty: true
 
 volumes:
-    vol_ihc_jupyter:
+    vol_msAnalysis_jupyter:
     
 ## to call it.
 # run the following

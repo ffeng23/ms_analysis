@@ -1,7 +1,7 @@
 FROM jupyter/r-notebook:r-4.2.2
 
-ARG NB_USER_NEW
-ARG NB_UID_NEW
+#ARG NB_USER_NEW
+#ARG NB_UID_NEW
 
 
 USER root
@@ -73,18 +73,19 @@ RUN echo "renv::settings\$use.cache(FALSE)" > /home/${NB_USER}/.Rprofile
 #    && echo ".rs.restartR()" >>/home/rstudio/.Rprofile 
 #COPY * ./
 
-USER root
+#-USER root
 #now change the owner
-RUN if [  $(id -u jovyan ) == "${NB_UID_NEW}" ];  then \
-             echo "need to modifying the existing account to new name...." \
-             && usermod -l ${NB_USER_NEW} ${NB_USER} \
-             && usermod -d /home/${NB_USER_NEW} -m ${NB_USER_NEW} \
-             && echo "done modifying......."; \
-          else \
-             usermod -l ${NB_USER_NEW} ${NB_USER} \
-             && usermod -d /home/${NB_USER_NEW} -m ${NB_USER_NEW} \
-             && echo "done username" \
-             && usermod -u ${NB_UID_NEW} ${NB_USER_NEW} \
-             && echo "done uid";\
-          fi
-RUN fix-permissions "/home/${NB_USER_NEW}" 
+#-RUN if [  $(id -u jovyan ) == "${NB_UID_NEW}" ];  then \
+#-             echo "need to modifying the existing account to new name...." \
+#-             && usermod -l ${NB_USER_NEW} ${NB_USER} \
+#-             && usermod -d /home/${NB_USER_NEW} -m ${NB_USER_NEW} \
+#-             && echo "done modifying......."; \
+#-          else \
+#-             usermod -l ${NB_USER_NEW} ${NB_USER} \
+#-             && usermod -d /home/${NB_USER_NEW} -m ${NB_USER_NEW} \
+#-             && echo "done username" \
+#-             && usermod -u ${NB_UID_NEW} ${NB_USER_NEW} \
+#-             && echo "done uid";\
+#-          fi
+#-RUN fix-permissions "/home/${NB_USER_NEW}"  \
+#-    && echo "export PATH=/opt/conda/bin:\$PATH" >> /home/${NB_USER_NEW}/.bashrc 
