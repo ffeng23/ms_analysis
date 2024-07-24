@@ -1,0 +1,23 @@
+# README
+
+July 19, 2024
+
+Mass Spec project for CD4 T cells.
+
+I don't have the total experimental design experiment.
+
+It seems to me this is a complicated experiment, but for me 
+I will work on the time series data only.
+
+
+one group
+
+and 4 time points, 5m, 10m, 15m, and 20min.
+
+# Analysis
+
+1) pca  time points to compare changes over time.
+2) cluster and group for time series patterns with line figure show patterns
+
+To do, need to run "analysis_CD4+T_0.3.R" to get the data processed first and then go to do PCR pattern, etc.
+
